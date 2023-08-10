@@ -71,3 +71,5 @@ This will display help and usage information about the script and its options.
 
 Feel free to adjust and enhance the readme as needed to provide additional context, instructions, and warnings based on your project's requirements.
 ```
+<!-- chmod +x /usr/local/bin/flutter-app.sh -->
+<!-- cp -f source_file destination_file -->

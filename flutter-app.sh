@@ -9,6 +9,7 @@ APP_NAME=""
 PROJECT_NAME=""
 FIREBASE=false
 FULL_APP=false
+FAST_API=false
 
 # Extract arguments
 while [[ $# -gt 0 ]]; do
@@ -41,6 +42,11 @@ while [[ $# -gt 0 ]]; do
         FULL_APP=true
         shift 
         ;;
+	--fast-api)
+	FAST_API=true
+	INTERNET_ACCESS=true
+	shift
+	;;
         *)
         # Assume it's the project name
         PROJECT_NAME="$1"
@@ -50,7 +56,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$PROJECT_NAME" ]; then
-    echo "Project name is missing. Type './setup_project.sh ?' for help."
+    echo "Project name is missing. Type 'create_flutter_project ?' for help."
     exit 1
 fi
 
@@ -64,18 +70,42 @@ if [ "$PROJECT_NAME" == "?" ]; then
     echo "  --multidex            Enable Multidex support for larger apps"
     echo "  --app-name <name>     Set a custom app name"
     echo "  --firebase            Configure Firebase services"
-    echo "  --full-app            Keep only the mobile platform, remove others"
+    echo "  --full-app            Create app with default flutter folder structure"
+    echo "  --fast-api            Configure for FastAPI"
     echo ""
     echo "Arguments:"
     echo "  project_name          Specify the name of the Flutter project"
     exit 0
 fi
-
-mkdir "$PROJECT_NAME"
-cd "$PROJECT_NAME"
-
-# create flutter app
+mkdir "dev/$PROJECT_NAME"
+cd "dev/$PROJECT_NAME"
+# create fluter app
 flutter create .
+flutter pub add velocity_x
+
+if [ "$FAST_API" = true ]; then
+	if ! grep -q '/venv/' .gitignore; then
+    sed -i '/\/android\/app\/release\/a\
+        /venv/
+    ' /gitignore
+    fi
+	flutter pub add http
+	mkdir api
+	virtualenv -p /usr/bin/python3 venv
+	source venv/bin/activate
+	pip install fastapi uvicorn
+	cd api
+	echo "from fastapi import FastAPI">main.py
+	echo "">>main.py
+	echo "app = FastAPI()">>main.py
+	echo "">>main.py
+	echo "">>main.py
+	echo "@app.get('/')">>main.py
+	echo "async def root():">>main.py
+	echo '    return {"message": "Hello World"}'>>main.py
+	deactivate
+	cd ..
+fi
 
 if [ "$INTERNET_ACCESS" = true ];then
     if ! grep -q '<uses-permission android:name="android.permission.INTERNET"\/>' android/app/src/main/AndroidManifest.xml; then
@@ -142,4 +172,6 @@ if [ "$FULL_APP" = false ];then
     rm -rf ios windows macos web
 fi
 
+clear
 echo "Project setup complete!"
+code .
