@@ -93,7 +93,11 @@ if [ "$FAST_API" = true ]; then
 	mkdir api
 	virtualenv -p /usr/bin/python3 venv
 	source venv/bin/activate
-	pip install fastapi uvicorn
+    echo "fastapi">requirements.txt
+    echo "pymongo">>requirements.txt
+    echo "python-jose">>requirements.txt
+    echo "passlib">>requirements.txt
+    echo "fastapi">>requirements.txt
 	cd api
 	echo "from fastapi import FastAPI">main.py
 	echo "">>main.py
