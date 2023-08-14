@@ -29,8 +29,8 @@ while [[ $# -gt 0 ]]; do
         ;;
         --app-name)
         DEFAULT_APP_NAME=false
-        APP_NAME="$2"
-        shift 
+        APP_NAME="${2:-$APP_NAME}"
+        
         ;;
         --firebase)
         FIREBASE=true
@@ -77,38 +77,56 @@ if [ "$PROJECT_NAME" == "?" ]; then
     echo "  project_name          Specify the name of the Flutter project"
     exit 0
 fi
-mkdir "dev/$PROJECT_NAME"
-cd "dev/$PROJECT_NAME"
-# create fluter app
-flutter create .
-flutter pub add velocity_x
+
 
 if [ "$FAST_API" = true ]; then
-	if ! grep -q '/venv/' .gitignore; then
-    sed -i '/\/android\/app\/release\/a\
-        /venv/
-    ' /gitignore
+    mkdir "dev/$PROJECT_NAME"
+    cd "dev/$PROJECT_NAME"
+    mkdir "$PROJECT_NAME"
+    cd "$PROJECT_NAME"
+    # create fluter app
+    flutter create .
+    flutter pub add velocity_x http
+    if [ "$FULL_APP" = false ];then
+        rm -rf ios windows macos web
     fi
-	flutter pub add http
+
+    cd ..
 	mkdir api
+    cd api
+    # create venv
 	virtualenv -p /usr/bin/python3 venv
 	source venv/bin/activate
+    # create files
     echo "fastapi">requirements.txt
+    echo "uvicorn">>requirements.txt
     echo "pymongo">>requirements.txt
+    echo "python-multipart">>requirements.txt
     echo "python-jose">>requirements.txt
     echo "passlib">>requirements.txt
-    echo "fastapi">>requirements.txt
-	cd api
-	echo "from fastapi import FastAPI">main.py
-	echo "">>main.py
-	echo "app = FastAPI()">>main.py
-	echo "">>main.py
-	echo "">>main.py
-	echo "@app.get('/')">>main.py
-	echo "async def root():">>main.py
-	echo '    return {"message": "Hello World"}'>>main.py
+
+	touch main.py
+
+    mkdir models
+    mkdir routes
+    mkdir helpers
+    mkdir controllers
+
+    touch models/__init__.py
+    touch routes/__init__.py
+    touch helpers/__init__.py
+    touch controllers/__init__.py
+
 	deactivate
 	cd ..
+fi
+
+if [ "$FAST_API" = false ]; then
+    mkdir "dev/$PROJECT_NAME"
+    cd "dev/$PROJECT_NAME"
+    # create fluter app
+    flutter create .
+    flutter pub add velocity_x
 fi
 
 if [ "$INTERNET_ACCESS" = true ];then
